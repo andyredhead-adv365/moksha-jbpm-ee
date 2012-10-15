@@ -2,6 +2,10 @@ package net.sf.moksha.jbpm.engine.ejb3;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import javax.ejb.ConcurrencyManagement;
+import javax.ejb.ConcurrencyManagementType;
+import javax.ejb.Lock;
+import javax.ejb.LockType;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
 
@@ -20,17 +24,31 @@ import org.apache.log4j.Logger;
  */
 @Singleton
 @Startup
+@ConcurrencyManagement(ConcurrencyManagementType.CONTAINER)
 public class JbpmSessionFactory {
 
 	private static Logger _log = Logger.getLogger(JbpmSessionFactory.class);
 	
+	private String _processDefLocalDir;
+	
+	public String getProcessDefLocalDir() {
+		return _processDefLocalDir;
+	}
+	
+	public void setProcessDefLocalDir(String newDirVal) {
+		if (_log.isDebugEnabled()) {
+			_log.debug("setProcessDefLocalDir - setting local process definition directory to: " + newDirVal);
+		}
+		_processDefLocalDir = newDirVal;
+	}
+	
 	@PostConstruct
 	public void init() {
 		if (_log.isDebugEnabled()) {
-			_log.debug("init - begin");
+			_log.debug("init - begin, process definition local dir set to:  " + _processDefLocalDir);
 		}
 		
-		System.out.println("init");
+		
 		
 		if (_log.isDebugEnabled()) {
 			_log.debug("init end");
@@ -43,7 +61,7 @@ public class JbpmSessionFactory {
 			_log.debug("shutdown - begin");
 		}
 		
-		System.out.println("shutdown");
+		
 		
 		if (_log.isDebugEnabled()) {
 			_log.debug("shutdown end");
@@ -51,9 +69,11 @@ public class JbpmSessionFactory {
 	}
 	
 	/**
-	 * Called by clients to obtain a 
+	 * Called by clients to obtain a jBPM session.
+	 * 
 	 * @return
 	 */
+	@Lock(LockType.READ)
 	public String createJbpmSession() {
 		String jbpmSession = null;
 		if (_log.isDebugEnabled()) {
@@ -68,7 +88,8 @@ public class JbpmSessionFactory {
 		
 		if (_log.isDebugEnabled()) {
 			_log.debug("createJbpmSession - end");
-		}		
+		}
+		
 		return jbpmSession;
 	}
 	

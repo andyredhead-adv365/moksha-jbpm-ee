@@ -9,6 +9,7 @@ import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -19,9 +20,16 @@ public class JbpmSessionFactoryTest {
 
 	@Deployment
 	public static Archive<?> createTestArchive() {
-		return ShrinkWrap.create(JavaArchive.class, "test.jar")
+		WebArchive webArchive = 
+		ShrinkWrap.create(WebArchive.class, "test.war")
 				.addClasses(JbpmSessionFactory.class)
-				.addAsResource(new File("src/main/resources/jboss-deployment-structure.xml"));
+				.addAsWebInfResource(new File("src/main/resources/jboss-deployment-structure.xml"), "jboss-deployment-structure.xml")
+				.addAsWebInfResource(new File("src/test/resources/ejb-jar.xml"), "ejb-jar.xml")
+		;
+		
+		System.out.println("The test archive:\n" + webArchive.toString(true));
+		
+		return webArchive;
 	}
 	
 	@EJB
