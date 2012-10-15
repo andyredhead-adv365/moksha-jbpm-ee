@@ -1,0 +1,83 @@
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'war'
+
+
+buildDir = 'target/gradle-build'
+
+
+libraryVersions = [
+   junit: '4.8.1', arquillian: '1.0.2.Final', jbossJavaeeSpec: '3.0.1.Final', weld: '1.1.8.Final-redhat-1', slf4j: '1.6.1', log4j: '1.2.14', cdi: '1.0-SP1', 
+]
+
+
+// repositories, start with using maven repos directly
+
+repositories {
+  
+	mavenCentral()
+	
+	maven {
+		url "https://repository.jboss.org/nexus/content/groups/public/"
+	}
+  
+}
+
+
+configurations {
+	compileOnly
+	jbossasRemoteTestRuntime { extendsFrom testRuntime }
+}
+
+
+dependencies {
+	
+	compileOnly group: 'org.jboss.spec', name: 'jboss-javaee-6.0', version: '3.0.1.Final'
+	compileOnly group: 'javax.enterprise', name: 'cdi-api', version: '1.0-SP4-redhat-1'
+	compileOnly group: 'org.jboss.spec.javax.annotation', name: 'jboss-annotations-api_1.1_spec'
+	compileOnly group: 'log4j', name: 'log4j', version: '1.2.17'
+	
+	testCompile group: 'junit', name: 'junit', version: 4.10
+	
+	testCompile group: 'org.jboss.arquillian', name: 'arquillian-bom', version: libraryVersions.arquillian	
+	testCompile group: 'org.jboss.arquillian.junit', name: 'arquillian-junit-container', version: libraryVersions.arquillian
+	
+	
+	jbossasRemoteTestRuntime group: 'org.jboss.as', name: 'jboss-as-arquillian-container-remote', version: '7.1.2.Final'
+	jbossasRemoteTestRuntime group: 'org.jboss.arquillian.protocol', name: 'arquillian-protocol-servlet', version: '1.0.2.Final'
+	jbossasRemoteTestRuntime group: 'javax.inject', name: 'javax.inject', version: '1-redhat-1'
+	jbossasRemoteTestRuntime group: 'org.jboss.spec', name: 'jboss-javaee-6.0', version: libraryVersions.jbossJavaeeSpec
+	
+}
+
+
+sourceSets {
+   main {
+      compileClasspath = configurations.compile + configurations.compileOnly
+   }
+   test {
+      compileClasspath = compileClasspath + configurations.compileOnly
+   }
+}
+
+
+// include the compileOnly configuration in the classpath generated for eclipse
+eclipseClasspath {
+    plusConfigurations += [ configurations.compileOnly, configurations.jbossasRemoteTestRuntime ]	// 
+   
+}
+
+
+jar {
+    manifest {
+        attributes("Dependencies": "org.apache.log4j")
+    }
+}
+
+
+task jbossasRemoteTestRuntime(type: Test) {
+   testClassesDir = sourceSets.test.output.classesDir
+   classpath = sourceSets.test.output + sourceSets.main.output + configurations.jbossasRemoteTestRuntime
+}
+
+
